@@ -52,11 +52,12 @@ run_on_base_dir(Config, Fun) ->
 lock_deps(Config) ->
     DepsDir = rebar_config:get(Config, deps_dir, "deps"),
     Ignores = string:tokens(rebar_config:get_global(Config, ignore, ""), ","),
+    KeepFirst = string:tokens(rebar_config:get_global(Config, keep_first, ""), ","),
     DepDirs = deps_dirs(DepsDir),
     SubDirs = rebar_config:get(Config, sub_dirs, []),
     DepVersions = get_dep_versions(DepDirs),
     AllDeps = collect_deps(["."|DepDirs++SubDirs]),
-    NewDeps = get_locked_deps(DepVersions, AllDeps, Ignores),
+    NewDeps = get_locked_deps(DepVersions, AllDeps, Ignores, KeepFirst),
     NewConfig = rebar_config:get_global(Config,
         lock_config, "./rebar.config.lock"),
     write_rebar_lock("./rebar.config", NewConfig, NewDeps),
@@ -77,13 +78,20 @@ list_deps_versions(Config) ->
 %% `AllDeps'. Dependencies, listed by name (atom) in `Ignores' are not
 %% locked and the spec found in `AllDeps' is passed through.
 %%
-get_locked_deps(DepVersions, AllDeps, Ignores) ->
+get_locked_deps(DepVersions, AllDeps, Ignores, KeepFirst) ->
     IgnoreNames = [ list_to_atom(I) || I <- Ignores ],
+    FirstNames = [ list_to_atom(I) || I <- KeepFirst ],
+    OrderedDepVersions = lists:foldl(fun(N, Acc) ->
+        case proplists:get_value(N, Acc) of
+            undefined -> Acc;
+            D -> [D | proplists:delete(N, Acc)]
+        end
+    end, DepVersions, FirstNames),
     NewDeps = [ begin
                     DepSpec = lists:keyfind(Name, 1, AllDeps),
                     lock_dep(DepSpec, Sha)
                 end
-                || {Name, Sha} <- DepVersions,
+                || {Name, Sha} <- OrderedDepVersions,
                    lists:member(Name, IgnoreNames) =:= false ],
     IgnoreDeps0 = [ lists:keyfind(Name, 1, AllDeps) || Name <- IgnoreNames ],
     IgnoreDeps = [ D || D <- IgnoreDeps0, D =/= false ],
