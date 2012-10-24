@@ -61,6 +61,15 @@ retain the spec as found in one of the `rebar.config` files that
 declared it. Note that if a dependency is declared more than once, the
 script picks a spec "at random" to use.
 
+## Keeping some dependencies first ##
+
+If there are dependencies which you wish to be the first in rebar.config.lock,
+you can list them using the `keep_first` option on the command line
+(comma separate multiple values).  For example, `rebar lock-deps keep_first=lager`
+would always keep `lager` as the first dependency in the deps list.
+This can be helpful when using lager.
+For more information, see https://github.com/basho/rebar/issues/270
+
 ## How you can integrate it into your build ##
 
 Assuming you build your project with `make`, add the following to your

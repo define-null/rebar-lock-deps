@@ -52,11 +52,13 @@ run_on_base_dir(Config, Fun) ->
 lock_deps(Config) ->
     DepsDir = rebar_config:get(Config, deps_dir, "deps"),
     Ignores = string:tokens(rebar_config:get_global(Config, ignore, ""), ","),
+    KeepFirst = string:tokens(rebar_config:get_global(Config, keep_first, ""), ","),
     DepDirs = deps_dirs(DepsDir),
     SubDirs = rebar_config:get(Config, sub_dirs, []),
     DepVersions = get_dep_versions(DepDirs),
+    SortedDepVersions = sort_dep_versions(DepVersions, KeepFirst),
     AllDeps = collect_deps(["."|DepDirs++SubDirs]),
-    NewDeps = get_locked_deps(DepVersions, AllDeps, Ignores),
+    NewDeps = get_locked_deps(SortedDepVersions, AllDeps, Ignores),
     NewConfig = rebar_config:get_global(Config,
         lock_config, "./rebar.config.lock"),
     write_rebar_lock("./rebar.config", NewConfig, NewDeps),
@@ -112,6 +114,14 @@ lock_dep({Name, _Version, {Git, Url, _Tag}}, Sha) ->
 %% string.
 get_dep_versions(Dirs) ->
     [ sha_for_project(D) || D <- Dirs ].
+
+sort_dep_versions(Deps, KeepFirst) ->
+    FirstNames = [ list_to_atom(N) || N <- KeepFirst ],
+    {_, Rest} = lists:partition(fun({N, _}) ->
+        lists:member(N, FirstNames)
+    end, Deps),
+    First = [lists:keyfind(N, 1, Deps) || N <- FirstNames],
+    First ++ lists:sort(Rest).
 
 sha_for_project(Dir) ->
     Cmd = ["cd ", Dir, "; git rev-parse HEAD"],
