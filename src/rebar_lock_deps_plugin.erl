@@ -34,11 +34,15 @@
 -author("Yuri Lukyanov <y.snaky@gmail.com>").
 -export([
     'lock-deps'/2,
+    'update-locked-deps'/2,
     'list-deps-versions'/2
 ]).
 
 'lock-deps'(Config, _AppFile) ->
     run_on_base_dir(Config, fun lock_deps/1).
+
+'update-locked-deps'(Config, _AppFile) ->
+    run_on_base_dir(Config, fun update_locked_deps/1).
 
 'list-deps-versions'(Config, _AppFile) ->
     run_on_base_dir(Config, fun list_deps_versions/1).
@@ -72,6 +76,11 @@ list_deps_versions(Config) ->
     lists:foreach(fun({Dep, Ver}) ->
         io:format("~s ~s~n", [Ver, Dep])
     end, DepVersions),
+    ok.
+
+update_locked_deps(Config) ->
+    Deps = rebar_config:get(Config, deps, []),
+    [update_dep(Config, App, Sha) || {App, _, {_, _, Sha}} <- Deps, is_list(Sha)],
     ok.
 
 %% Create rebar dependency specs for each dep in `DepVersions' locked
@@ -148,3 +157,29 @@ extract_deps(Dir) ->
             end;
         false -> []
     end.
+
+update_dep(Config, App, Sha) ->
+    io:format("Updating locked ~s to ~s...~n", [App, Sha]),
+    AppDir = get_dep_dir(Config, App),
+    case git_checkout(AppDir, Sha) of
+        {ok, _} -> ok;
+        {error, _} ->
+            git_fetch_checkout(AppDir, Sha)
+    end.
+
+get_dep_dir(Config, App) ->
+    BaseDir = rebar_config:get_xconf(Config, base_dir, []),
+    DepsDir = rebar_config:get(Config, deps_dir, "deps"),
+    filename:join([BaseDir, DepsDir, App]).
+
+git_checkout(AppDir, Sha) ->
+    ShOpts = [return_on_error, {cd, AppDir}],
+    rebar_utils:sh(git_checkout_cmd(Sha), ShOpts).
+
+git_fetch_checkout(AppDir, Sha) ->
+    ShOpts = [abort_on_error, {cd, AppDir}],
+    rebar_utils:sh("git fetch origin", ShOpts),
+    rebar_utils:sh(git_checkout_cmd(Sha), ShOpts).
+
+git_checkout_cmd(Sha) ->
+    lists:flatten(io_lib:format("git checkout -q ~s", [Sha])).

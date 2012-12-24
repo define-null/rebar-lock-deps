@@ -69,6 +69,26 @@ would always keep `lager` as the first dependency in the deps list.
 This can be helpful when using lager.
 For more information, see https://github.com/basho/rebar/issues/270
 
+## Updating locked dependencies ##
+
+Sometimes, in case you already have your dependencies locked and
+rebar.config.lock checked-in to your repository,
+it is too expensive to run `rebar -C rebar.config.lock update-deps`
+every time you checkout a certain commit of your project
+as it is require updating the deps from remoute repositories.
+Since there are already certain SHAs for every dependency
+in rebar.config.lock, in most cases you can use the local
+deps repositories to checkout certain versions of the deps.
+You can use `rebar -C rebar.config.lock udpate-locked-deps` for this.
+When there is no local commit needed to update a certain dependency,
+this command will update it from the remote repository.
+
+Particularly, it is helpful when using `git bisect` to find a 'bad' commit
+in your repository (you go back in time and you usually have all needed commits
+in local deps repositories).
+
+Only git is supported for the moment.
+
 ## How you can integrate it into your build ##
 
 Assuming you build your project with `make`, add the following to your
@@ -77,7 +97,7 @@ Assuming you build your project with `make`, add the following to your
     # The release branch should have a file named USE_REBAR_LOCKED
     use_locked_config = $(wildcard USE_REBAR_LOCKED)
     ifeq ($(use_locked_config),USE_REBAR_LOCKED)
-      rebar_config = rebar.config.locked
+      rebar_config = rebar.config.lock
     else
       rebar_config = rebar.config
     endif
@@ -95,7 +115,9 @@ The idea is that a clean build from the tag will pull deps based on
 rebar.config.lock and you will have reproduced what you tested.
 
 On master, you don't have a `USE_REBAR_LOCKED` file checked in and will
-use the standard `rebar.config` file.
+use the standard `rebar.config` file. Of course, you can also use
+`rebar.config.lock` in master, if you want to have stable reproduceble
+builds in master as well.
 
 This approach should keep merge conflicts to a minimum. It is also
 nice that you can easily review which dependencies have changed by
