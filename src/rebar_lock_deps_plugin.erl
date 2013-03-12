@@ -80,7 +80,13 @@ list_deps_versions(Config) ->
 
 update_locked_deps(Config) ->
     Deps = rebar_config:get(Config, deps, []),
-    [update_dep(Config, App, Sha) || {App, _, {_, _, Sha}} <- Deps, is_list(Sha)],
+    lists:foreach(fun({App, _, {_, _, Sha}}) ->
+        AppDir = get_dep_dir(Config, App),
+        case filelib:is_dir(AppDir) and is_list(Sha) of
+            true -> update_dep(App, AppDir, Sha);
+            false -> nop
+        end
+    end, Deps),
     ok.
 
 %% Create rebar dependency specs for each dep in `DepVersions' locked
@@ -158,9 +164,8 @@ extract_deps(Dir) ->
         false -> []
     end.
 
-update_dep(Config, App, Sha) ->
+update_dep(App, AppDir, Sha) ->
     io:format("Updating locked ~s to ~s...~n", [App, Sha]),
-    AppDir = get_dep_dir(Config, App),
     case git_checkout(AppDir, Sha) of
         {ok, _} -> ok;
         {error, _} ->
