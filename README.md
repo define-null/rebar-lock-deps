@@ -22,7 +22,7 @@ Add the following to your top-level rebar.config:
     %% Plugin dependency
     {deps, [
     	{rebar_lock_deps_plugin, ".*",
-         {git, "git://github.com/seth/rebar_lock_deps_plugin.git", {branch, "master"}}}
+         {git, "https://github.com/lukyanov/rebar-lock-deps.git", {branch, "master"}}}
     ]}.
 
     %% Plugin usage
