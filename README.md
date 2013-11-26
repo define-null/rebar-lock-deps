@@ -74,12 +74,12 @@ For more information, see https://github.com/basho/rebar/issues/270
 Sometimes, in case you already have your dependencies locked and
 rebar.config.lock checked-in to your repository,
 it is too expensive to run `rebar -C rebar.config.lock update-deps`
-every time you checkout a certain commit of your project
-as it is require updating the deps from remoute repositories.
+every time you checkout a specific commit of your project
+as it is require updating the deps from remote repositories.
 Since there are already certain SHAs for every dependency
 in rebar.config.lock, in most cases you can use the local
 deps repositories to checkout certain versions of the deps.
-You can use `rebar -C rebar.config.lock udpate-locked-deps` for this.
+You can use `rebar -C rebar.config.lock update-deps-local` for this.
 When there is no local commit needed to update a certain dependency,
 this command will update it from the remote repository.
 

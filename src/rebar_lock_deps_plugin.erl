@@ -34,15 +34,15 @@
 -author("Yuri Lukyanov <y.snaky@gmail.com>").
 -export([
     'lock-deps'/2,
-    'update-locked-deps'/2,
+    'local-update-deps'/2,
     'list-deps-versions'/2
 ]).
 
 'lock-deps'(Config, _AppFile) ->
     run_on_base_dir(Config, fun lock_deps/1).
 
-'update-locked-deps'(Config, _AppFile) ->
-    run_on_base_dir(Config, fun update_locked_deps/1).
+'update-deps-local'(Config, _AppFile) ->
+    run_on_base_dir(Config, fun update_deps_local/1).
 
 'list-deps-versions'(Config, _AppFile) ->
     run_on_base_dir(Config, fun list_deps_versions/1).
@@ -78,7 +78,7 @@ list_deps_versions(Config) ->
     end, DepVersions),
     ok.
 
-update_locked_deps(Config) ->
+update_deps_local(Config) ->
     Deps = rebar_config:get(Config, deps, []),
     lists:foreach(fun({App, _, {_, _, Sha}}) ->
         AppDir = get_dep_dir(Config, App),
