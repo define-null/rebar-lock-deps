@@ -115,7 +115,7 @@ write_rebar_lock(OrigPath, NewPath, NewDeps) ->
     New = lists:keyreplace(deps, 1, Orig, {deps, NewDeps}),
     {ok, F} = file:open(NewPath, [write]),
     io:fwrite(F, "~s~n~n",
-        ["%% THIS FILE IS GENERATED. DO NOT EDIT IT MANUALLY %%"]),
+        ["%% THIS FILE IS GENERATED. EDIT WITH CAUTION %%~n"]),
     [ io:fwrite(F, "~p.~n", [Item]) || Item <- New ],
     io:fwrite(F, "~s", ["\n"]),
     file:close(F),
