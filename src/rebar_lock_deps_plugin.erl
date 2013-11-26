@@ -34,7 +34,7 @@
 -author("Yuri Lukyanov <y.snaky@gmail.com>").
 -export([
     'lock-deps'/2,
-    'local-update-deps'/2,
+    'update-deps-local'/2,
     'list-deps-versions'/2
 ]).
 
