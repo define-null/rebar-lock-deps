@@ -1,4 +1,6 @@
-# A Rebar Plugin that Generates Locked Dependencies for Rebar Projects #
+# rebar-lock-deps #
+
+A Rebar Plugin that Generates Locked Dependencies for Rebar Projects.
 
 ## tl;dr ##
 
