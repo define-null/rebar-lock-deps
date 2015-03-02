@@ -80,13 +80,17 @@ list_deps_versions(Config) ->
 
 update_deps_local(Config) ->
     Deps = rebar_config:get(Config, deps, []),
-    lists:foreach(fun({App, _, {_, _, Sha}}) ->
-        AppDir = get_dep_dir(Config, App),
-        case filelib:is_dir(AppDir) and is_list(Sha) of
-            true -> update_dep(App, AppDir, Sha);
-            false -> nop
-        end
-    end, Deps),
+    lists:foreach(fun(Value) ->
+                          {App1, Sha1} = case Value of
+                                             {App, _, {_, _, Sha}} -> {App, Sha};
+                                             {App, _, {_, _, Sha}, _} -> {App, Sha}
+                                         end,
+                          AppDir = get_dep_dir(Config, App1),
+                          case filelib:is_dir(AppDir) and is_list(Sha1) of
+                              true -> update_dep(App1, AppDir, Sha1);
+                              false -> nop
+                          end
+                  end, Deps),
     ok.
 
 %% Create rebar dependency specs for each dep in `DepVersions' locked
